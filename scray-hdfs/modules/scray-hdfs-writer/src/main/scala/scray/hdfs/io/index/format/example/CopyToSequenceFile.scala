@@ -29,10 +29,11 @@ import scray.hdfs.io.index.format.sequence.types.IndexValue
 import org.apache.hadoop.fs.FSDataOutputStream
 import java.io.FileOutputStream
 import scray.hdfs.io.index.format.sequence.types.Blob
-import scray.hdfs.io.index.format.sequence.BinarySequenceFileWriter
+import scray.hdfs.io.index.format.sequence.SequenceFileWriter
 import scray.hdfs.io.index.format.sequence.IdxReader
 import scray.hdfs.io.index.format.sequence.BlobFileReader
 import scala.collection.mutable.HashMap
+import scray.hdfs.io.index.format.sequence.mapping.impl.OutputTextBytesWritable
 
 /**
  * Example application to copy files from local file system to SequenceFile.
@@ -49,7 +50,7 @@ object CopyToSequenceFile {
       val sourceFile = args(0)
       val destination = args(1)
 
-      val destWriter = new BinarySequenceFileWriter(destination, new Configuration, None)
+      val destWriter = new SequenceFileWriter(destination, new Configuration, None, new OutputTextBytesWritable)
 
       val sourceReader = new FileInputStream(sourceFile)
       val filename = sourceFile.split(System.getProperty("file.separator")).last

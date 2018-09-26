@@ -1,26 +1,32 @@
 package scray.hdfs.io.coordination
 
+import java.io.File
+
 import org.scalatest.WordSpec
 
 import com.typesafe.scalalogging.LazyLogging
-
-import java.io.ByteArrayInputStream
-import scray.hdfs.io.index.format.sequence.BlobFileReader
 import scray.hdfs.io.index.format.sequence.IdxReader
-import java.io.File
+import scray.hdfs.io.index.format.sequence.BlobFileReader
+import scray.hdfs.io.index.format.sequence.mapping.impl.OutputBlob
 import java.util.HashMap
-import org.junit.Assert
-
+import junit.framework.Assert
+import java.io.ByteArrayInputStream
+import java.nio.file.Paths
 
 class WriteCoordinatorSpecs extends WordSpec with LazyLogging {
+
   "WriteCoordinator " should {
-    " wrtite to new file if count limit is reached " in {
-      val coordinator = new ReadWriteCoordinatorImpl
+    
+      val pathToWinutils = classOf[WriteCoordinatorSpecs].getClassLoader.getResource("HADOOP_HOME/bin/winutils.exe");
+      val hadoopHome = Paths.get(pathToWinutils.toURI()).toFile().toString().replace("\\bin\\winutils.exe", "")
+      System.setProperty("hadoop.home.dir", hadoopHome)
+      
+    " wrtite to new blob file until count limit is reached " in {
       val outPath = "target/WriteCoordinatorSpecs/writeCoordinatorSpecsMaxCount/" + System.currentTimeMillis() + "/"
 
       val metadata = WriteDestination("000", outPath, IHdfsWriterConstats.FileFormat.SequenceFile, Version(0), 512 * 1024 * 1024L, 5)
+      val writer = new CoordinatedWriter(512 * 1024 * 1024L, metadata, new OutputBlob)
 
-      val writer = coordinator.getWriter(metadata)
       val writtenData = new HashMap[String, Array[Byte]]();
 
       for (i <- 0 to 20) {
@@ -32,9 +38,14 @@ class WriteCoordinatorSpecs extends WordSpec with LazyLogging {
 
       val fileName = getIndexFiles(outPath + "/scray-data-000-v0/")
         .map(fileName => {
-          (
-            new IdxReader("file://" + fileName + ".idx"),
-            new BlobFileReader("file://" + fileName + ".blob"))
+          
+              if(fileName.startsWith("/")) {
+                (new IdxReader("file://" + fileName + ".idx", new OutputBlob),
+                new BlobFileReader("file://" + fileName + ".blob"))
+              } else {
+                (new IdxReader("file:///" + fileName + ".idx", new OutputBlob),
+                new BlobFileReader("file:///" + fileName + ".blob"))
+              }
         })
         .map {
           case (idxReader, blobReader) => {
