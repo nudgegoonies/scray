@@ -15,20 +15,18 @@
 
 package scray.hdfs.io.index.format.raw
 
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.Map
+
+import collection.JavaConverters._
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
-import java.net.URI
 import org.apache.hadoop.fs.Path
+
 import com.google.common.io.ByteStreams
-import java.io.InputStream
 import com.typesafe.scalalogging.LazyLogging
-import java.io.OutputStream
-import java.io.File
-import java.nio.file.Paths
-import scray.hdfs.io.environment.WindowsHadoopLibs
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.SettableFuture
-import java.util.ArrayList
 
 class RawFileWriter(hdfsURL: String, hdfsConf: Configuration) extends LazyLogging {
 
@@ -42,6 +40,19 @@ class RawFileWriter(hdfsURL: String, hdfsConf: Configuration) extends LazyLoggin
     this(hdfsUrl, new Configuration)
   }
 
+  def this(hdfsUrl: String, hdfsConfigurationParameter: java.lang.Iterable[Map.Entry[String, String]]) = {
+
+    this(hdfsUrl, new Configuration)
+
+    // Copy parameter unchecked
+    hdfsConfigurationParameter
+      .asScala
+      .foldLeft(hdfsConf)((acc, parameter) => {
+        acc.set(parameter.getKey, parameter.getValue);
+        acc
+      })
+  }
+
   def initWriter(path: String): Unit = {
 
     hdfsConf.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName);
@@ -50,11 +61,9 @@ class RawFileWriter(hdfsURL: String, hdfsConf: Configuration) extends LazyLoggin
     hdfsConf.set("fs.defaultFS", hdfsURL)
 
     logger.debug(s"Create writer for path ${path}")
-    
+
     dataWriter = FileSystem.get(hdfsConf);
   }
-
-
 
   def write(fileName: String, data: InputStream) = synchronized {
     val hdfswritepath = new Path(fileName);
@@ -84,8 +93,7 @@ class RawFileWriter(hdfsURL: String, hdfsConf: Configuration) extends LazyLoggin
 
     dataWriter.create(new Path(fileName))
   }
-  
- 
+
   def close = {
     dataWriter.close()
   }

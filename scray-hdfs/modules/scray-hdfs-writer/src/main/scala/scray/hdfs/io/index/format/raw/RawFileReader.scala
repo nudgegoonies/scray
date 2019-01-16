@@ -26,18 +26,35 @@ import org.apache.hadoop.fs.Path
 import com.google.common.util.concurrent.SettableFuture
 import com.google.common.util.concurrent.ListenableFuture
 import java.util.ArrayList
+import java.util.Map
+import collection.JavaConverters._
 
 class RawFileReader(hdfsURL: String, hdfsConf: Configuration) extends LazyLogging {
 
   var dataReader: FileSystem = null; // scalastyle:off null
-
-  def this(hdfsURL: String) {
-    this(hdfsURL, new Configuration)
-  }
-
+  
   if (getClass.getClassLoader != null) {
     hdfsConf.setClassLoader(getClass.getClassLoader)
   }
+  
+  def this(hdfsURL: String) {
+    this(hdfsURL, new Configuration)
+  }
+  
+  def this(hdfsUrl: String, hdfsConfigurationParameter: java.lang.Iterable[Map.Entry[String, String]]) = {
+
+    this(hdfsUrl, new Configuration)
+
+    // Copy parameter unchecked
+    hdfsConfigurationParameter
+      .asScala
+      .foldLeft(hdfsConf)((acc, parameter) => {
+        acc.set(parameter.getKey, parameter.getValue);
+        acc
+      })
+  }
+
+
   
   def initReader() = {
     hdfsConf.set("fs.hdfs.impl", classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName);

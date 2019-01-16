@@ -17,8 +17,10 @@ package scray.hdfs.io.index.format.sequence
 
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import java.util.Map
+import java.lang.Iterable
 
-
+import collection.JavaConverters._
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
@@ -39,14 +41,27 @@ class ValueFileReader[DATAKEY <: Writable, DATAVALUE <: Writable](reader: Sequen
   val idxEntry = new Blob
 
   def this(path: String, hdfsConf: Configuration = new Configuration, fs: Option[FileSystem] = None, outMapping: SequneceValue[DATAKEY, DATAVALUE]) = {
-    this( new SequenceFile.Reader(hdfsConf, Reader.file(new Path(path)), Reader.bufferSize(4096)), outMapping)
-    
-    if(getClass.getClassLoader != null) {
+
+    this(new SequenceFile.Reader(hdfsConf, Reader.file(new Path(path)), Reader.bufferSize(4096)), outMapping)
+
+    if (getClass.getClassLoader != null) {
       hdfsConf.setClassLoader(getClass.getClassLoader)
     }
-
   }
-  
+
+  def this(path: String, hdfsConf: Configuration, fs: Option[FileSystem], outMapping: SequneceValue[DATAKEY, DATAVALUE], hdfsConfigurationParameter: Iterable[Map.Entry[String, String]]) = {
+
+    this(new SequenceFile.Reader(hdfsConf, Reader.file(new Path(path)), Reader.bufferSize(4096)), outMapping)
+
+    // Copy parameter unchecked
+    hdfsConfigurationParameter
+      .asScala
+      .foldLeft(hdfsConf)((acc, parameter) => {
+        acc.set(parameter.getKey, parameter.getValue);
+        acc
+      })
+  }
+
   def this(path: String, outMapping: SequneceValue[DATAKEY, DATAVALUE]) = {
     this(path, new Configuration, None, outMapping: SequneceValue[DATAKEY, DATAVALUE])
   }
@@ -117,14 +132,14 @@ class ValueFileReader[DATAKEY <: Writable, DATAVALUE <: Writable](reader: Sequen
 
     var syncSeen = false
     try {
-    while (!syncSeen && !valueFound && reader.next(key, value)) {
+      while (!syncSeen && !valueFound && reader.next(key, value)) {
 
-      syncSeen = reader.syncSeen();
+        syncSeen = reader.syncSeen();
 
-      if (keyIn.equals(key.getId) && offset == key.getOffset) {
-        valueFound = true
+        if (keyIn.equals(key.getId) && offset == key.getOffset) {
+          valueFound = true
+        }
       }
-    }
     } catch {
       case e: java.io.EOFException => {
         print(s"No data for key ${keyIn}, offset ${offset}\n")
@@ -140,7 +155,7 @@ class ValueFileReader[DATAKEY <: Writable, DATAVALUE <: Writable](reader: Sequen
       None
     }
   }
-  
+
   def getNextBlobAsStream(keyIn: String, offset: Int, startPosition: Long): Option[Tuple2[Long, InputStream]] = {
     reader.seek(startPosition)
 

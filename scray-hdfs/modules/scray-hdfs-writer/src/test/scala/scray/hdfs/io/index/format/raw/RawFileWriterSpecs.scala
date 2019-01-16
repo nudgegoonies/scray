@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream
 import org.junit.Assert
 import scala.io.Source
 import java.nio.file.Paths
+import java.util.Map
 
 class RawFileWriterSpecs extends WordSpec with LazyLogging {
   
@@ -45,5 +46,10 @@ class RawFileWriterSpecs extends WordSpec with LazyLogging {
       
       Assert.assertEquals(dataToWrite, readDate)
     }
+   "use custom configuration " in {
+    val parameter = new java.util.ArrayList[java.util.Map.Entry[String, String]]
+       
+     val writer = new RawFileWriter("file://ff", parameter)
+   }
   }
 }

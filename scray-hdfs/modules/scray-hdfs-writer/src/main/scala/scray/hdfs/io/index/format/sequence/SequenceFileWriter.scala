@@ -17,6 +17,10 @@ package scray.hdfs.io.index.format.sequence
 
 import java.io.InputStream
 import java.math.BigInteger
+import java.lang.Iterable
+import java.util.Map
+
+import collection.JavaConverters._
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
@@ -52,6 +56,19 @@ class SequenceFileWriter[IDXKEY <: Writable, IDXVALUE <: Writable, DATAKEY <: Wr
 
   def this(path: String, hdfsConf: Configuration, outTypeMapping: SequenceKeyValuePair[IDXKEY, IDXVALUE, DATAKEY, DATAVALUE], createIndex: Boolean) {
     this(path, hdfsConf, None, outTypeMapping, createIndex)
+  }
+  
+  def this(path: String, hdfsConf: Configuration, outTypeMapping: SequenceKeyValuePair[IDXKEY, IDXVALUE, DATAKEY, DATAVALUE], createIndex: Boolean, hdfsConfigurationParameter: Iterable[Map.Entry[String, String]]) = {
+
+    this(path, new Configuration, None, outTypeMapping, createIndex)
+
+    // Copy parameter unchecked
+    hdfsConfigurationParameter
+      .asScala
+      .foldLeft(hdfsConf)((acc, parameter) => {
+        acc.set(parameter.getKey, parameter.getValue);
+        acc
+      })
   }
 
   private def initWriter(

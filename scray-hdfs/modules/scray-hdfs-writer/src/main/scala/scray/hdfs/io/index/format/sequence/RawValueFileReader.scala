@@ -26,8 +26,10 @@ import com.typesafe.scalalogging.LazyLogging
 import scray.hdfs.io.index.format.sequence.mapping.SequenceKeyValuePair
 import org.apache.hadoop.io.Writable
 import scray.hdfs.io.index.format.sequence.mapping.SequneceValue
+import java.util.Map
+import collection.JavaConverters._
 
-class RawValueFileReader[DATAKEY <: Writable, DATAVALUE <: Writable](path: String, hdfsConf: Configuration, fs: Option[FileSystem], outMapping: SequneceValue[DATAKEY, DATAVALUE]) extends LazyLogging {
+class RawValueFileReader[DATAKEY <: Writable, DATAVALUE <: Writable](path: String, hdfsConf: Configuration, outMapping: SequneceValue[DATAKEY, DATAVALUE]) extends LazyLogging {
 
   if(getClass.getClassLoader == null) {
     hdfsConf.setClassLoader(getClass.getClassLoader)
@@ -44,7 +46,20 @@ class RawValueFileReader[DATAKEY <: Writable, DATAVALUE <: Writable](path: Strin
   private var hasNextValue = false
   
   def this(path: String, outMapping: SequneceValue[DATAKEY, DATAVALUE]) = {
-    this(path, new Configuration, None, outMapping)
+    this(path, new Configuration, outMapping)
+  }
+  
+  def this(hdfsUrl: String, outMapping: SequneceValue[DATAKEY, DATAVALUE], hdfsConfigurationParameter: java.lang.Iterable[Map.Entry[String, String]]) = {
+
+    this(hdfsUrl, outMapping)
+
+    // Copy parameter unchecked
+    hdfsConfigurationParameter
+      .asScala
+      .foldLeft(hdfsConf)((acc, parameter) => {
+        acc.set(parameter.getKey, parameter.getValue);
+        acc
+      })
   }
 
   /**
