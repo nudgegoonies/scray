@@ -6,6 +6,7 @@ import java.util.HashMap
 import java.net.URI
 import scray.hdfs.io.write.ScrayListenableFuture
 import scray.hdfs.io.read.FileParameter
+import java.lang.Iterable
 
 class ReadServiceImpl extends ReadService {
   val reader = new HashMap[String, RawFileReader]()
@@ -61,6 +62,11 @@ class ReadServiceImpl extends ReadService {
     }
 
   }
+  
+  def deleteFile(path: String,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): scray.hdfs.io.write.ScrayListenableFuture[String] = ???
+  def getFileList(path: String,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): scray.hdfs.io.write.ScrayListenableFuture[java.util.List[scray.hdfs.io.read.FileParameter]] = ???
+  def getInputStream(path: String,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): scray.hdfs.io.write.ScrayListenableFuture[java.io.InputStream] = ???
+
   private def getAuthority(path: String): String = {
     val uri = new URI(path)
     uri.getAuthority

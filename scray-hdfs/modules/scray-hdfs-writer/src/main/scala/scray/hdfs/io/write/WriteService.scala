@@ -19,6 +19,8 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.math.BigInteger
 import java.util.UUID
+import java.util.Map
+import java.lang.Iterable
 
 import com.google.common.util.concurrent.ListenableFuture
 import scray.hdfs.io.write.IHdfsWriterConstats.SequenceKeyValueFormat
@@ -34,18 +36,29 @@ trait WriteService {
   def createWriter(path: String, format: SequenceKeyValueFormat): UUID
   def createWriter(path: String, format: SequenceKeyValueFormat, numberOpKeyValuePairs: Int): UUID
   
+  def createWriter(path: String, hdfsClientParameters: Iterable[Map.Entry[String, String]]): UUID 
+  def createWriter(path: String, format: SequenceKeyValueFormat, hdfsClientParameters: Iterable[Map.Entry[String, String]]): UUID
+  def createWriter(path: String, format: SequenceKeyValueFormat, numberOpKeyValuePairs: Int, hdfsClientParameters: Iterable[Map.Entry[String, String]]): UUID
+  
+   
   
   def insert(resource: UUID, id: String, updateTime: Long, data: Array[Byte]):  ScrayListenableFuture[WriteResult]
   def insert(resource: UUID, id: String, updateTime: Long, data: InputStream, blobSplitSize: Int = 5 * 2048):  ScrayListenableFuture[WriteResult]
   def insert(resource: UUID, id: String, updateTime: Long, data: InputStream, dataSize: BigInteger, blobSplitSize: Int):  ScrayListenableFuture[WriteResult]
   
   def writeRawFile(path: String, data: InputStream): ScrayListenableFuture[WriteResult]
+  def writeRawFile(path: String, data: InputStream, hdfsClientParameters: Iterable[Map.Entry[String, String]]): ScrayListenableFuture[WriteResult]
+
   /**
    * @param writeAndRename A dot will be set at the first character of the filename while writing. File will be renamed after stream was closed.
    */
   def writeRawFile(path: String): ScrayOutputStream
+  def writeRawFile(path: String, hdfsClientParameters: Iterable[Map.Entry[String, String]]): ScrayOutputStream
+
   
   def rename(source: String, destination: String): ScrayListenableFuture[WriteResult]
+  def rename(source: String, destination: String, hdfsClientParameters: Iterable[Map.Entry[String, String]]): ScrayListenableFuture[WriteResult]
+
 
   def close(resource: UUID)
   def isClosed(resource: UUID): ScrayListenableFuture[WriteResult]

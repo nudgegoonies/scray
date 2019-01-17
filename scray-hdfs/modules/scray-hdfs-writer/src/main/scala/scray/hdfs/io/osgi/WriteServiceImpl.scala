@@ -19,6 +19,7 @@ import java.io.InputStream
 import java.math.BigInteger
 import java.util.HashMap
 import java.util.UUID
+import java.lang.Iterable
 
 import org.slf4j.LoggerFactory
 
@@ -197,6 +198,14 @@ class WriteServiceImpl extends WriteService {
       }
     }
   }
+  
+  def createWriter(path: String,format: scray.hdfs.io.write.IHdfsWriterConstats.SequenceKeyValueFormat,numberOpKeyValuePairs: Int,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): java.util.UUID = ???
+  def createWriter(path: String,format: scray.hdfs.io.write.IHdfsWriterConstats.SequenceKeyValueFormat,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): java.util.UUID = ???
+  def createWriter(path: String,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): java.util.UUID = ???
+  def rename(source: String,destination: String,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): scray.hdfs.io.write.ScrayListenableFuture[scray.hdfs.io.write.WriteResult] = ???
+  def writeRawFile(path: String,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): scray.hdfs.io.write.ScrayOutputStream = ???
+  def writeRawFile(path: String,data: java.io.InputStream,hdfsClientParameters: Iterable[java.util.Map.Entry[String,String]]): scray.hdfs.io.write.ScrayListenableFuture[scray.hdfs.io.write.WriteResult] = ???
+
 
   private def getWriter(resource: UUID): CoordinatedWriter[Writable, Writable, Writable, Writable] = {
     if (writersMetadata.get(resource) != null) {
