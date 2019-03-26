@@ -11,7 +11,10 @@ jobs:
         include:
                 - stage: build-with-tests
                   install:
-                          mvn --settings .maven.xml install -B 
+                          mvn --settings .maven.xml install -B
+                - stage: create-report
+                  install:
+                          mvn site --settings .maven.xml
                 - stage: build-profil-MinimizedDependencies
                   install:
                           mvn clean install --settings .maven.xml -B -PMinimizedDependencies
@@ -25,7 +28,11 @@ jobs:
 stages:
   - build-with-tests 
   - build-profil-MinimizedDependencies 
+  - create-report  
   - name: deploy-develop-with-profil-MinimizedDependencies 
     if: branch = develop 
   - name: deploy-develop
     if: branch = develop
+
+after_success:
+- bash <(curl -s https://codecov.io/bash)
